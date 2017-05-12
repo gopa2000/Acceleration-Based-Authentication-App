@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.example.gopa2000.fyp_app.MainActivity">
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="68dp"
+        android:id="@+id/linearLayout">
+
+        <Button
+            android:text="Record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/rec_button"
+            android:layout_weight="1"
+            android:layout_marginRight="15dp" />
+
+        <Button
+            android:text="Stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/stop_button"
+            android:layout_weight="1"
+            android:layout_marginLeft="15dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:weightSum="1">
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="165dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.83">
+
+            <TextView
+                android:text="Accelerometer (x,y,z)"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/acc_label"
+                android:layout_margin="15dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/x_acc"
+                android:layout_margin="15dp"
+                android:layout_marginLeft="5dp"
+                android:hint="X-Axis" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/y_acc"
+                android:layout_margin="15dp"
+                android:hint="Y-Axis" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/z_acc"
+                android:layout_margin="15dp"
+                android:hint="Z-Axis" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="172dp"
+            android:layout_height="240dp">
+
+            <TextView
+                android:text="Gyroscope (x,y,z)"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/gyr_label"
+                android:layout_margin="15dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/x_gyr"
+                android:layout_margin="15dp"
+                android:layout_marginLeft="5dp"
+                android:hint="X-Axis" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/y_gyr"
+                android:layout_margin="15dp"
+                android:hint="Y-Axis" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/z_gyr"
+                android:layout_margin="15dp"
+                android:hint="Z-Axis" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:text="Pair"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linearLayout"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"
+        android:id="@+id/pair_button" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="textPersonName"
+        android:ems="10"
+        android:layout_alignParentTop="true"
+        android:layout_alignLeft="@+id/linearLayout"
+        android:layout_alignStart="@+id/linearLayout"
+        android:id="@+id/fn_field"
+        android:hint="Filename" />
+</RelativeLayout>
