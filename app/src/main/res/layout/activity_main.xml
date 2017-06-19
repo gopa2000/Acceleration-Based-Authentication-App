@@ -8,34 +8,9 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.gopa2000.fyp_app.MainActivity">
+    tools:context="com.example.gopa2000.fyp_app.MainActivity"
+    android:layout_centerVertical="true">
 
-
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="68dp"
-        android:id="@+id/linearLayout">
-
-        <Button
-            android:text="Record"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/rec_button"
-            android:layout_weight="1"
-            android:layout_marginRight="15dp" />
-
-        <Button
-            android:text="Stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/stop_button"
-            android:layout_weight="1"
-            android:layout_marginLeft="15dp" />
-    </LinearLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -44,7 +19,8 @@
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:weightSum="1">
+        android:weightSum="1"
+        android:background="#1A0E0B0B">
 
         <LinearLayout
             android:orientation="vertical"
@@ -118,23 +94,40 @@
         </LinearLayout>
     </LinearLayout>
 
-    <Button
-        android:text="Pair"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/linearLayout"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="12dp"
-        android:id="@+id/pair_button" />
+        android:layout_marginTop="20dp"
+        android:id="@+id/linearLayout"
+        android:layout_below="@+id/fn_field"
+        android:layout_centerHorizontal="true">
+
+        <Button
+            android:text="Record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/rec_button"
+            android:layout_weight="1"
+            android:layout_marginRight="15dp" />
+
+        <Button
+            android:text="Stop"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/stop_button"
+            android:layout_weight="1"
+            android:layout_marginLeft="15dp" />
+    </LinearLayout>
 
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
         android:ems="10"
-        android:layout_alignParentTop="true"
-        android:layout_alignLeft="@+id/linearLayout"
-        android:layout_alignStart="@+id/linearLayout"
         android:id="@+id/fn_field"
-        android:hint="Filename" />
+        android:hint="Filename"
+        android:layout_marginTop="60dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignStart="@+id/linearLayout" />
 </RelativeLayout>

@@ -35,14 +35,14 @@ public class SensorCombo {
     }
 
     public void saveToFile(String filename){
-        String path = Environment.getExternalStorageDirectory().toString() + File.separator + "fyp";
-        File directory = new File(path);
-        directory.mkdirs();
-
-        File outputFile = new File(directory, filename);
-
         try {
+            String path = Environment.getExternalStorageDirectory().toString() + File.separator + "fyp";
+            File directory = new File(path);
+            directory.mkdirs();
+
+            File outputFile = new File(directory, filename);
             outputFile.createNewFile();
+
             FileOutputStream fos = new FileOutputStream(outputFile);
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
 
@@ -98,6 +98,37 @@ public class SensorCombo {
             else {
                 j++;
             }
+        }
+    }
+
+    public void generateAccTestFile(){
+        int accLength = accData.size();
+        int gyrLength = gyroData.size();
+
+        int i=0, j=0;
+
+        int n = (accLength > gyrLength) ? accLength : gyrLength;
+
+        while(i < accLength) {
+            long currentTimestamp = accData.get(i).getTimestamp();
+
+            Date date = new Date(currentTimestamp);
+            DateFormat formatter = new SimpleDateFormat("HH mm ss ");
+            String formattedTS = formatter.format(currentTimestamp);
+
+            StringBuilder sb = new StringBuilder();
+            sb.append(formattedTS);
+            sb.append(accData.get(i).getX() + " ");
+            sb.append(accData.get(i).getY() + " ");
+            sb.append(accData.get(i).getZ() + " ");
+            sb.append("0" + " ");
+            sb.append("0" + " ");
+            sb.append("0" + " ");
+
+            logData.add(sb.toString());
+            Log.i(TAG, "generateTestFile: " + sb.toString());
+
+            i++;
         }
     }
 }
