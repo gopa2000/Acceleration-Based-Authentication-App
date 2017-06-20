@@ -131,4 +131,28 @@ public class SensorCombo {
             i++;
         }
     }
+
+    public ArrayList<AccelData> getAccData() {
+        return accData;
+    }
+
+    public void setAccData(ArrayList<AccelData> accData) {
+        this.accData = accData;
+    }
+
+    public ArrayList<GyroData> getGyroData() {
+        return gyroData;
+    }
+
+    public void setGyroData(ArrayList<GyroData> gyroData) {
+        this.gyroData = gyroData;
+    }
+
+    public ArrayList<String> getLogData() {
+        return logData;
+    }
+
+    public void setLogData(ArrayList<String> logData) {
+        this.logData = logData;
+    }
 }

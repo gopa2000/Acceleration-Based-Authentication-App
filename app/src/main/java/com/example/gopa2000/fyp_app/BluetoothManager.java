@@ -381,12 +381,19 @@ public class BluetoothManager {
             // Get a BluetoothSocket for a connection with the
             // given BluetoothDevice
             try {
-                if (secure) {
-                    tmp = device.createRfcommSocketToServiceRecord(
-                            MY_UUID_SECURE);
-                } else {
-                    tmp = device.createInsecureRfcommSocketToServiceRecord(
-                            MY_UUID_INSECURE);
+                try {
+                    if (secure) {
+                        tmp = device.createRfcommSocketToServiceRecord(
+                                MY_UUID_SECURE);
+                                //device.getUuids()[0].getUuid());
+                    } else {
+                        tmp = device.createInsecureRfcommSocketToServiceRecord(
+                                MY_UUID_INSECURE);
+                                //device.getUuids()[0].getUuid());
+                    }
+                } catch (NullPointerException e){
+                    Log.e(TAG, "ConnectThread: Device UUID is null. Using default instead.", e);
+                    tmp = device.createRfcommSocketToServiceRecord(MY_UUID_SECURE);
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Socket Type: " + mSocketType + "create() failed", e);
@@ -411,7 +418,7 @@ public class BluetoothManager {
                 // Close the socket
                 try {
                     mmSocket.close();
-                } catch (IOException e2) {
+                } catch (Exception e2) {
                     Log.e(TAG, "unable to close() " + mSocketType +
                             " socket during connection failure", e2);
                 }
