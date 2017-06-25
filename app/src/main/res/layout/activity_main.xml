@@ -120,14 +120,16 @@
             android:layout_marginLeft="15dp" />
     </LinearLayout>
 
-    <EditText
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
         android:ems="10"
         android:id="@+id/fn_field"
-        android:hint="Filename"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="64dp"
+        android:text="Set Filename"
+        android:textSize="20sp"
         android:layout_alignParentTop="true"
-        android:layout_alignStart="@+id/linearLayout" />
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="14dp" />
 </RelativeLayout>
