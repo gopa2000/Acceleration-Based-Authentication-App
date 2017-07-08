@@ -3,6 +3,7 @@ package com.example.gopa2000.fyp_app;
 import android.hardware.Sensor;
 import android.util.Log;
 
+import java.lang.reflect.Array;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -34,23 +35,33 @@ public class Device {
     private ArrayList<Frame> frame;
 
     // Key specifics
-    private String key;
-    private int numFrames = 9;
-    private int numBands = 21;
+    private String fingerprint;
+    private int numFrames = 21;
+    private int numBands = 9;
 
     public Device(String fn, SensorCombo input){
+
+        Log.d(TAG, "Device: Constructor called.");
+
         this.fileName = fn;
         this.rawData = input;
         this.frameMatrix = new ArrayList<>();
         this.frameMatrixFFT = new ArrayList<>();
         this.frame = new ArrayList<>();
+        this.rmsUnfiltered = new ArrayList<>();
         init();
     }
 
     private void init(){
+
+        Log.d(TAG, "init: init() function called.");
+
         this.fs = calculateSamplingRate();
         generateFrameMatrix();
         generateFrameMatrixFFT();
+        generateFFTBands();
+        printFinalFrames(1);
+        generateKey();
     }
 
     private Double calculateSamplingRate(){
@@ -64,8 +75,10 @@ public class Device {
             Date Tmax = formatter.parse(logData.get(L-1));
 
             long seconds = (Tmax.getTime() - Tmin.getTime()) / 1000;
-            return (double)(L/seconds);
 
+            Log.d(TAG, "calculateSamplingRate: Sampling rate calculated - " + (double)(L/seconds));
+
+            return (double)(L/seconds);
         } catch (Exception e){
             Log.e(TAG, "calculateSamplingRate: Parsing error", e);
         }
@@ -74,12 +87,17 @@ public class Device {
     }
 
     private void generateFrameMatrix(){
+
+        Log.d(TAG, "generateFrameMatrix: Generating frameMatrix");
+
         ArrayList<AccelData> accData = rawData.getAccData();
 
         for(AccelData acc:accData){
             Double rmsVal = sqrt(acc.getX()*acc.getX() + acc.getY()*acc.getY() + acc.getZ()*acc.getZ());
-            rmsUnfiltered.add(rmsVal);
+            this.rmsUnfiltered.add(rmsVal);
         }
+
+        Log.d(TAG, "generateFrameMatrix: " + statistics());
 
         // generates rmsFiltered. Look definition for details
         filterData();
@@ -91,15 +109,20 @@ public class Device {
 
         frameMatrix.add(new ArrayList<Double>());
         for(i=0; i<n; i++){
-            if((i % m) == 0){
+            if(i!=0 && ((i % m) == 0)){
                 frameMatrix.add(new ArrayList<Double>());
                 j++;
             }
             frameMatrix.get(j).add(rmsFiltered.get(i));
         }
+
+        Log.d(TAG, "generateFrameMatrix: FrameMatrix generation complete - " + statistics());
     }
 
     private void generateFrameMatrixFFT(){
+
+        Log.d(TAG, "generateFrameMatrixFFT: Generating frameMatrixFFT");
+
         // Hamming window
         HammingWindow hw = new HammingWindow();
         for(ArrayList<Double> arr:frameMatrix){
@@ -144,30 +167,46 @@ public class Device {
                 frameFFTValues.set(i, frameFFTValues.get(i)/maxVal);
             }
 
+            //Log.d(TAG, "generateFrameMatrixFFT: frameFFTValuesSize - " + frameFFTValues.size());
             frameMatrixFFT.add(frameFFTValues);
         }
+
+        Log.d(TAG, "generateFrameMatrixFFT: frameMatrixFFT generated - " + statistics());
     }
 
     private void generateFFTBands(){
-        for(ArrayList<Double> frame:frameMatrixFFT){
-            ArrayList<ArrayList<Double>> current = new ArrayList<>();
-            current.add(new ArrayList<Double>());
+        Log.d(TAG, "generateFFTBands: generating FFTBands...");
 
-            int n = frame.size();
-            int m = Math.round(n/numBands);
-            int j=0;
+        for(ArrayList<Double> _frame:frameMatrixFFT) {
+            this.frame.add(new Frame());
+            ArrayList<ArrayList<Double>> current = new ArrayList<>();
+
+            int n = _frame.size();
+            int m = Math.round(n/numBands) + 1;
+
+            current.add(new ArrayList<Double>());
+            int j = 0;
+
+            //Log.d(TAG, "generateFFTBands: frameSize - " + n);
             for(int i=0; i<n; i++){
-                if((i % m) == 0){
-                    j++;
+                if(i!=0 && (i % m == 0)){
                     current.add(new ArrayList<Double>());
+                    j++;
                 }
-                current.get(j).add(frame.get(i));
+
+                current.get(j).add(_frame.get(i));
             }
+
+            this.frame.get(this.frame.size() - 1).setBands(current);
         }
+
+        Log.d(TAG, "generateFFTBands: FFTBands generated - " + statistics());
     }
 
     // Data filtering method - modify this alone for data filtering and normalisation
     private void filterData(){
+        Log.d(TAG, "filterData: Filtering data");
+
         double windowSize = 30.0;
 
         double[] b = new double[(int)windowSize];
@@ -192,15 +231,128 @@ public class Device {
         }
     }
 
+    private void generateKey(){
+        Log.d(TAG, "generateKey: generating key...");
+
+        String _key = "";
+        for(int i=1; i<numFrames; i++){
+            for(int j=0; j<numBands-1; j++){
+                _key += bitFunc(i,j);
+            }
+        }
+
+        this.fingerprint = _key;
+        Log.d(TAG, "generateKey: key generated - " + this.fingerprint);
+    }
+
+    private String bitFunc(int n, int m){
+        double relation = E(n,m) - E(n,m+1) - (E(n-1,m) - E(n-1, m+1));
+
+        if(relation > 0)
+            return "1";
+        else
+            return "0";
+    }
+
+
+    public double E(int n, int m){
+        ArrayList<Double> S = frame.get(n).getBand(m);
+        int L = S.size();
+        double energy = 0;
+
+        for(Double s:S){
+            energy = energy + s*s;
+        }
+
+        energy = (1.0/L) * energy;
+        return energy;
+    }
+
+    public String getFingerprint(){
+        return this.fingerprint;
+    }
+
+    private String statistics(){
+        int frameMatrixFrames = this.frameMatrix.size();
+        int frameMatrixFramesFFT = this.frameMatrixFFT.size();
+
+        Double avgFrameSize = 0.0;
+        for(ArrayList<Double> a:this.frameMatrix){
+            avgFrameSize += a.size();
+        }
+        if(frameMatrixFrames > 0)
+            avgFrameSize = avgFrameSize/frameMatrixFrames;
+
+        Double avgFrameSizeFFT = 0.0;
+        for(ArrayList<Double> a:this.frameMatrixFFT){
+            avgFrameSizeFFT += a.size();
+        }
+        if(frameMatrixFramesFFT > 0)
+            avgFrameSizeFFT = avgFrameSizeFFT/frameMatrixFramesFFT;
+
+        int numberOfFrames = frame.size();
+        Double avgNumOfBands = 0.0;
+
+        for(Frame f:this.frame){
+            avgNumOfBands += f.getBands().size();
+        }
+        if(numberOfFrames > 0)
+            avgNumOfBands = avgNumOfBands/numberOfFrames;
+
+        String result = "Number of frames in FrameMatrix = " + frameMatrixFrames +
+                ", Average size of each frame in FrameMatrix = " + avgFrameSize +
+                ", Number of frames in FrameMatrixFFT = " + frameMatrixFramesFFT +
+                ", Average size of each frame in FrameMatrixFFT = " + avgFrameSizeFFT +
+                ", Average number of bands in each frame = " + avgNumOfBands;
+
+        return result;
+    }
+
+    private void printFinalFrames(){
+        int frameCounter = 0;
+        String result = "";
+        for(Frame f:frame){
+            result = result + "Frame #" + frameCounter + "\n";
+            Log.d(TAG, "printFinalFrames: Frame #" + frameCounter);
+            for(int i=0; i<numBands; i++) {
+                ArrayList<Double> current = f.getBand(i);
+                result = result + "Band #" + i + ": ";
+                String tmp = "";
+                for(Double d:current){
+                    result = result + " " + d.toString();
+                    tmp = tmp + " " + d.toString();
+                }
+                Log.d(TAG, "printFinalFrames: Band #" + i + ": "+ tmp);
+                result += "\n";
+            }
+            result += "\n";
+        }
+
+        Log.d(TAG, "printFinalFrames: " + result);
+    }
+
+    private void printFinalFrames(int n ){
+        int frameCounter = 0;
+        String result = "";
+        for(Frame f:frame){
+            ArrayList<ArrayList<Double>> current = f.getBands();
+            result = result + "Number of bands in frame #" + frameCounter + ": "+ current.size() + "\n";
+            frameCounter++;
+        }
+
+        Log.d(TAG, "printFinalFrames: " + result);
+    }
+
     private class Frame {
         private ArrayList<ArrayList<Double>> band;
-
         public ArrayList<Double> getBand(int index){
             return band.get(index);
         }
-
-        public void setBand(ArrayList<ArrayList<Double>> _band){
+        public void setBands(ArrayList<ArrayList<Double>> _band){
             this.band = _band;
+        }
+        public ArrayList<ArrayList<Double>> getBands(){
+            return band;
         }
     }
 }

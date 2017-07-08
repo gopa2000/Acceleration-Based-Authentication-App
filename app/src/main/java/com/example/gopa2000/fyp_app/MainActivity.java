@@ -7,7 +7,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
@@ -21,16 +20,17 @@ import android.os.Message;
 import android.os.ParcelUuid;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewAnimator;
@@ -74,7 +74,7 @@ public class MainActivity extends Activity implements SensorEventListener{
     private Sensor gyrSensor;
 
     private boolean recording;
-
+    private Device currentDevice;
 
     private ArrayList<SensorCombo> sensorCombo;
     private SensorCombo currentRecording;
@@ -82,6 +82,10 @@ public class MainActivity extends Activity implements SensorEventListener{
     /** ui **/
     private Button recordButton;
     private Button stopButton;
+    private Button clearButton;
+    private Button authButton;
+    private Button deriveButton;
+    private Switch autoSwitch;
 
     private TextView xacc;
     private TextView yacc;
@@ -91,7 +95,9 @@ public class MainActivity extends Activity implements SensorEventListener{
     private TextView ygyr;
     private TextView zgyr;
 
-    private TextView filename_field;
+    private TextView statusView;
+
+    private EditText filename_field;
 
     /** misc **/
     private String filename;
@@ -131,6 +137,8 @@ public class MainActivity extends Activity implements SensorEventListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        autoSwitch = (Switch) findViewById(R.id.auto_switch);
+
         ba = BluetoothAdapter.getDefaultAdapter();
 
         // if adapter is null, then BT isn't suported
@@ -157,10 +165,16 @@ public class MainActivity extends Activity implements SensorEventListener{
         recordButton = (Button) findViewById(R.id.rec_button);
         stopButton = (Button) findViewById(R.id.stop_button);
 
+        deriveButton = (Button) findViewById(R.id.derive_btn);
+        authButton = (Button) findViewById(R.id.auth_btn);
+        clearButton = (Button) findViewById(R.id.clear_btn);
+        autoSwitch = (Switch) findViewById(R.id.auto_switch);
+
         recordButton.setEnabled(true);
         stopButton.setEnabled(false);
 
-        filename_field = (TextView) findViewById(R.id.fn_field);
+        statusView = (TextView) findViewById(R.id.status_tv);
+        filename_field = (EditText) findViewById(R.id.fn_field);
 
         xacc = (TextView) findViewById(R.id.x_acc);
         yacc = (TextView) findViewById(R.id.y_acc);
@@ -170,6 +184,7 @@ public class MainActivity extends Activity implements SensorEventListener{
         ygyr = (TextView) findViewById(R.id.y_gyr);
         zgyr = (TextView) findViewById(R.id.z_gyr);
 
+        currentDevice = null;
 
         recordButton.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -177,7 +192,6 @@ public class MainActivity extends Activity implements SensorEventListener{
             startRecording();
             }
         });
-
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -185,56 +199,32 @@ public class MainActivity extends Activity implements SensorEventListener{
             }
         });
 
-        filename_field.setOnClickListener(new View.OnClickListener() {
+        clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                clearSession();
+            }
+        });
 
-                final EditText input = new EditText(MainActivity.this);
-                input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-                builder.setView(input);
-
-                builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        setName(input.getText().toString());
-                        sendName(input.getText().toString());
-                    }
-                });
-
-                builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                    }
-                });
-
-                builder.show();
+        deriveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                SensorCombo cur = sensorCombo.get(sensorCombo.size() - 1);
+                initDevice(filename, cur);
             }
         });
     }
 
-    private void sendName(String _fileName){
-        if(btManager.getState() != BluetoothManager.STATE_CONNECTED){
-            Toast.makeText(this, "No device connected. Input filename on receiver's device.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        else {
-            sendMessage("SETFILENAME "+_fileName);
-        }
+    public void setStatusText(String text){
+        statusView.setText(text);
     }
 
-    private void setName(String _filename){
-        filename_field.setText(_filename);
-        filename = _filename;
-    }
-
-    private void startRecording(){
+    public void startRecording(){
         if(filename_field.getText().toString().equals(""))
             Toast.makeText(MainActivity.this, "No filename specified.", Toast.LENGTH_SHORT).show();
 
         else if(!recording) {
-            sendMessage("RECORD START");
+            sendMessage("RECORD_START");
             recordButton.setEnabled(false);
             stopButton.setEnabled(true);
             recording = true;
@@ -243,9 +233,9 @@ public class MainActivity extends Activity implements SensorEventListener{
         }
     }
 
-    private void stopRecording(){
+    public void stopRecording(){
         if(recording){
-            sendMessage("RECORD STOP");
+            sendMessage("RECORD_STOP");
             recordButton.setEnabled(true);
             stopButton.setEnabled(false);
             recording = false;
@@ -253,7 +243,17 @@ public class MainActivity extends Activity implements SensorEventListener{
             currentRecording.generateAccTestFile();
             currentRecording.saveToFile(filename);
             currentRecording = null;
+            setStatusText("Ready to derive key.");
         }
+    }
+
+    private void initDevice(String fn, SensorCombo current){
+        currentDevice = new Device(fn, current);
+    }
+
+    private void clearSession(){
+        currentDevice = null;
+        setStatusText("Session cleared. Ready to record.");
     }
 
     @Override
@@ -358,18 +358,12 @@ public class MainActivity extends Activity implements SensorEventListener{
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
-                    String messageParts[] = readMessage.split(" ");
 
-                    if(messageParts[0].equals("RECORD")){
-                        if(messageParts[1].equals("START"))
-                            startRecording();
-                        else if(messageParts[1].equals("STOP"))
-                            stopRecording();
-                    }
+                    if(readMessage.equals("RECORD_START"))
+                        startRecording();
 
-                    if(messageParts[0].equals("SETFILENAME")){
-                        setName(messageParts[1]);
-                    }
+                    if(readMessage.equals("RECORD_STOP"))
+                        stopRecording();
 
                     break;
 

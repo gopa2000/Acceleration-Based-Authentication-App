@@ -1,5 +1,7 @@
 package com.example.gopa2000.fyp_app;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 
 /**
@@ -14,6 +16,10 @@ public class DSP {
         double[] b1 = getRealArrayScalarDiv(b, a[0]);
 
         int sx = x.size();
+
+        Log.d("Device ", "filter: array size check - b: " + b.length + ", a: " + a.length + ", x: " + x.size() + ", x first value - " + x.get(0));
+
+        while(filter.size() < sx) filter.add(0.0);
         filter.set(0, b1[0] * x.get(0));
 
         for(int i=1; i<sx; i++){
