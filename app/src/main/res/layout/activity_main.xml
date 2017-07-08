@@ -120,16 +120,85 @@
             android:layout_marginLeft="15dp" />
     </LinearLayout>
 
-    <TextView
+    <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:inputType="textPersonName"
         android:ems="10"
         android:id="@+id/fn_field"
-        android:layout_marginTop="64dp"
-        android:text="Set Filename"
-        android:textSize="20sp"
+        android:hint="Filename"
+        android:layout_marginTop="60dp"
         android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="14dp" />
+        android:layout_alignStart="@+id/linearLayout" />
+
+    <Switch
+        android:text="Auto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="21dp"
+        android:id="@+id/auto_switch" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="110dp"
+        android:layout_marginTop="20dp"
+        android:background="#1A0E0B0B"
+        android:layout_below="@+id/linearLayout"
+        android:layout_alignParentStart="true"
+        android:id="@+id/v3_rl">
+
+        <TextView
+            android:text="Current Status:"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@+id/v3_rl"
+            android:layout_toStartOf="@+id/linearLayout"
+            android:layout_marginTop="11dp"
+            android:id="@+id/textView" />
+
+        <TextView
+            android:text="Not ready to exchange key."
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="25dp"
+            android:id="@+id/status_tv"
+            android:layout_alignBaseline="@+id/textView"
+            android:layout_alignBottom="@+id/textView"
+            android:layout_toEndOf="@+id/textView"
+            android:textSize="16sp"
+            android:textColor="#000" />
+
+        <Button
+            android:text="Auth"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/auth_btn"
+            android:layout_marginBottom="10dp"
+            android:layout_marginEnd="31dp"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true" />
+
+        <Button
+            android:text="Derive"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/derive_btn"
+            android:layout_alignBaseline="@+id/auth_btn"
+            android:layout_alignBottom="@+id/auth_btn"
+            android:layout_toStartOf="@+id/auth_btn"
+            android:layout_marginEnd="10dp" />
+
+        <Button
+            android:text="Clear Session"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:id="@+id/clear_btn"
+            android:layout_alignBaseline="@+id/derive_btn"
+            android:layout_alignBottom="@+id/derive_btn"
+            android:layout_alignParentStart="true" />
+    </RelativeLayout>
+
 </RelativeLayout>
