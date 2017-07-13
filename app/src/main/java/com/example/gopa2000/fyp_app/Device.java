@@ -197,6 +197,17 @@ public class Device {
                 current.get(j).add(_frame.get(i));
             }
 
+            if(current.size() < 9){
+                int toUse = current.get(0).size();
+                while(current.size() != 9){
+                    for(int i=current.get(j).size(); i<toUse; i++){
+                        current.get(j).add(0.0);
+                    }
+                    current.add(new ArrayList<Double>());
+                    j++;
+                }
+            }
+
             this.frame.get(this.frame.size() - 1).setBands(current);
         }
 

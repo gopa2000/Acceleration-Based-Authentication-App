@@ -41,7 +41,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends Activity implements SensorEventListener{
 
@@ -96,8 +99,13 @@ public class MainActivity extends Activity implements SensorEventListener{
     private TextView zgyr;
 
     private TextView statusView;
-
     private EditText filename_field;
+
+    /* recording timer tasks */
+    private StopRecordingTask stopRecordingTask;
+    private StartRecordingTask startRecordingTask;
+    private Timer startTimer;
+    private Timer stopTimer;
 
     /** misc **/
     private String filename;
@@ -138,7 +146,6 @@ public class MainActivity extends Activity implements SensorEventListener{
         setContentView(R.layout.activity_main);
 
         autoSwitch = (Switch) findViewById(R.id.auto_switch);
-
         ba = BluetoothAdapter.getDefaultAdapter();
 
         // if adapter is null, then BT isn't suported
@@ -189,13 +196,39 @@ public class MainActivity extends Activity implements SensorEventListener{
         recordButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-            startRecording();
+                if(filename_field.getText().toString().equals(""))
+                    Toast.makeText(MainActivity.this, "No filename specified.", Toast.LENGTH_SHORT).show();
+                else {
+                    startTimer = new Timer();
+                    stopTimer = new Timer();
+
+                    startRecordingTask = new StartRecordingTask(MainActivity.this);
+                    stopRecordingTask = new StopRecordingTask(MainActivity.this);
+
+                    long startDelay = 5000;
+                    long endDelay = 15000;
+
+                    Date timeToStart = new Date(System.currentTimeMillis() + startDelay);
+                    long timeToStartInMillis = timeToStart.getTime();
+                    long timeToStopInMillis = timeToStartInMillis + endDelay;
+                    Date timeToStop = new Date(timeToStopInMillis);
+
+                    Log.d("SyncFix", "TimeToStart: " + timeToStart.getTime() + ", TimeToStop: " + timeToStop.getTime());
+
+                    sendMessage("RECORD|START|" + Long.toString(timeToStartInMillis));
+
+                    startTimer.schedule(startRecordingTask, timeToStart);
+                    stopTimer.schedule(stopRecordingTask, timeToStop);
+
+                    recordButton.setEnabled(false);
+                    stopButton.setEnabled(true);
+                }
             }
         });
         stopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-            stopRecording();
+                stopRecording();
             }
         });
 
@@ -215,18 +248,27 @@ public class MainActivity extends Activity implements SensorEventListener{
         });
     }
 
-    public void setStatusText(String text){
-        statusView.setText(text);
+    public void cancelStartTimer(){
+        startTimer.cancel();
+        startTimer.purge();
+    }
+
+    public void cancelStopTimer(){
+        stopTimer.cancel();
+        stopTimer.purge();
+    }
+
+    public void setStatusText(final String text){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                statusView.setText(text);
+            }
+        });
     }
 
     public void startRecording(){
-        if(filename_field.getText().toString().equals(""))
-            Toast.makeText(MainActivity.this, "No filename specified.", Toast.LENGTH_SHORT).show();
-
-        else if(!recording) {
-            sendMessage("RECORD_START");
-            recordButton.setEnabled(false);
-            stopButton.setEnabled(true);
+        if(!recording) {
             recording = true;
             currentRecording = new SensorCombo();
             filename = filename_field.getText().toString();
@@ -235,9 +277,14 @@ public class MainActivity extends Activity implements SensorEventListener{
 
     public void stopRecording(){
         if(recording){
-            sendMessage("RECORD_STOP");
-            recordButton.setEnabled(true);
-            stopButton.setEnabled(false);
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    recordButton.setEnabled(true);
+                    stopButton.setEnabled(false);
+                }
+            });
+
             recording = false;
             sensorCombo.add(currentRecording);
             currentRecording.generateAccTestFile();
@@ -358,12 +405,48 @@ public class MainActivity extends Activity implements SensorEventListener{
                     byte[] readBuf = (byte[]) msg.obj;
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
+                    String msgParts[] = readMessage.split("\\|");
 
-                    if(readMessage.equals("RECORD_START"))
-                        startRecording();
+                    Log.d(TAG, "handleMessage: Received message - " + readMessage);
+                    Log.d(TAG, "handleMessage: msgParts - " + msgParts[0] + ", " + msgParts[1] + "," + msgParts[2]);
 
-                    if(readMessage.equals("RECORD_STOP"))
-                        stopRecording();
+                    if(msgParts[0].equals("RECORD")){
+                        Log.d(TAG, "handleMessage: HIT RECORD");
+                        if(msgParts[1].equals("START")){
+                            Log.d(TAG, "handleMessage: HIT START");
+
+                            startTimer = new Timer();
+                            stopTimer = new Timer();
+
+                            startRecordingTask = new StartRecordingTask(MainActivity.this);
+                            stopRecordingTask = new StopRecordingTask(MainActivity.this);
+
+                            long stopDelay = 15000;
+
+                            Timer timer = new Timer();
+                            long timeToStartValue = Long.parseLong(msgParts[2]);
+                            long timeToStopValue = timeToStartValue + stopDelay;
+                            Date timeToStart = new Date(timeToStartValue);
+                            Date timeToStop = new Date(timeToStopValue);
+
+                            Log.d("SyncFix", "TimeToStart: " + timeToStart.getTime() + ", TimeToStop: " + timeToStop.getTime());
+
+                            startTimer.schedule(startRecordingTask, timeToStart);
+                            stopTimer.schedule(stopRecordingTask, timeToStop);
+
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    recordButton.setEnabled(false);
+                                    stopButton.setEnabled(true);
+                                }
+                            });
+                        }
+
+                        else if (msgParts[1].equals("STOP")){
+
+                        }
+                    }
 
                     break;
 
@@ -419,7 +502,7 @@ public class MainActivity extends Activity implements SensorEventListener{
         if(recording){
             Sensor sensor = sensorEvent.sensor;
 
-            Log.i(TAG, "onSensorChanged: Sensor working!" + sensorEvent.sensor.toString());
+           // Log.i(TAG, "onSensorChanged: Sensor working!" + sensorEvent.sensor.toString());
 
             if(sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
@@ -436,7 +519,7 @@ public class MainActivity extends Activity implements SensorEventListener{
                 yacc.setText(String.valueOf(y));
                 zacc.setText(String.valueOf(z));
 
-                Log.i(TAG, "onSensorChanged: Accelerometer values - " + x + ", " + y + ", " + "z");
+                //Log.i(TAG, "onSensorChanged: Accelerometer values - " + x + ", " + y + ", " + "z");
             }
 
             else if(sensor.getType() == Sensor.TYPE_GYROSCOPE){
@@ -454,7 +537,7 @@ public class MainActivity extends Activity implements SensorEventListener{
                 ygyr.setText(String.valueOf(y));
                 zgyr.setText(String.valueOf(z));
 
-                Log.i(TAG, "onSensorChanged: Gyroscope values - " + x + ", " + y + ", " + z);
+               // Log.i(TAG, "onSensorChanged: Gyroscope values - " + x + ", " + y + ", " + z);
             }
         }
     }
@@ -486,6 +569,34 @@ public class MainActivity extends Activity implements SensorEventListener{
         super.onPause();
         if(recording){
             sensorManager.unregisterListener(this);
+        }
+    }
+
+    private static class StartRecordingTask extends TimerTask {
+
+        private MainActivity mainActivity;
+
+        public StartRecordingTask(MainActivity _activity){
+            mainActivity = _activity;
+        }
+
+        public void run(){
+            mainActivity.startRecording();
+            mainActivity.cancelStartTimer();
+        }
+    }
+
+    private class StopRecordingTask extends TimerTask {
+
+        private MainActivity mainActivity;
+
+        public StopRecordingTask(MainActivity _activity){
+            mainActivity = _activity;
+        }
+
+        public void run(){
+            mainActivity.stopRecording();
+            mainActivity.cancelStopTimer();
         }
     }
 }

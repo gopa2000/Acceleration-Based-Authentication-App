@@ -5,5 +5,6 @@ package com.example.gopa2000.fyp_app;
  */
 
 public interface KeyGenerator {
-    public void generateKey();
+    public MsgKeyPair generateKey(String fingerprint);
+    public String KeyDecoder(String fingerprint, String key) throws Exception;
 }
