@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_key_exchange_actvity_receiver"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.example.gopa2000.fyp_app.KeyExchangeActvityReceiver">
+
+    <TextView
+        android:text="Received Message (Base64)"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="21dp"
+        android:layout_marginTop="62dp"
+        android:id="@+id/rec_label"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rec_label"
+        android:layout_alignStart="@+id/rec_label"
+        android:layout_marginTop="13dp"
+        android:id="@+id/b64_tv"
+        android:textAppearance="@android:style/TextAppearance.Material.Caption" />
+
+    <TextView
+        android:text="Hex"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="88dp"
+        android:id="@+id/hex_label"
+        android:layout_below="@+id/b64_tv"
+        android:layout_alignStart="@+id/b64_tv" />
+
+    <TextView
+        android:text="Original Message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/hex_label"
+        android:layout_alignParentStart="true"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="119dp"
+        android:id="@+id/org_label" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/hex_msg"
+        android:layout_below="@+id/hex_label"
+        android:layout_alignStart="@+id/hex_label"
+        android:layout_marginTop="9dp"
+        android:textAppearance="@android:style/TextAppearance.Material.Caption" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/org_label"
+        android:layout_alignStart="@+id/hex_msg"
+        android:layout_marginTop="9dp"
+        android:id="@+id/org_msg"
+        android:textAppearance="@android:style/TextAppearance.Material.Caption" />
+</RelativeLayout>

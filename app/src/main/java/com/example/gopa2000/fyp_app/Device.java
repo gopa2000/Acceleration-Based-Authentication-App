@@ -39,6 +39,8 @@ public class Device {
     private int numFrames = 21;
     private int numBands = 9;
 
+    private MsgKeyPair msgKeyPair;
+
     public Device(String fn, SensorCombo input){
 
         Log.d(TAG, "Device: Constructor called.");
@@ -352,6 +354,14 @@ public class Device {
         }
 
         Log.d(TAG, "printFinalFrames: " + result);
+    }
+
+    public void setMsgKeyPair(MsgKeyPair mkp){
+        this.msgKeyPair = mkp;
+    }
+
+    public MsgKeyPair getMsgKeyPair(){
+        return this.msgKeyPair;
     }
 
     private class Frame {
