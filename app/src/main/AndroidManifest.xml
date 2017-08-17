@@ -16,6 +16,7 @@
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -24,5 +25,15 @@
             android:configChanges="orientation|keyboardHidden"
             android:label="@string/select_device"
             android:theme="@android:style/Theme.Material.Dialog" />
+        <activity
+            android:name=".KeyExchangeActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="Key Exchange:"
+            android:theme="@android:style/Theme.Material.Dialog" />
+        <activity android:name=".KeyExchangeActvityReceiver"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="Key Exchange:"
+            android:theme="@android:style/Theme.Material.Dialog"/>
     </application>
+
 </manifest>

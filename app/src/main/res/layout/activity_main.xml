@@ -169,7 +169,7 @@
             android:layout_alignBaseline="@+id/textView"
             android:layout_alignBottom="@+id/textView"
             android:layout_toEndOf="@+id/textView"
-            android:textColorLink="?android:attr/textColorPrimaryActivated" />
+             />
 
         <Button
             android:text="Auth"

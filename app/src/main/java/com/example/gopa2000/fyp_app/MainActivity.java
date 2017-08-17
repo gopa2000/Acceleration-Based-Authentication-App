@@ -208,7 +208,6 @@ public class MainActivity extends Activity implements SensorEventListener{
                 else {
 
                     if(!autoSwitch.isChecked()){
-                        sendMessage("RECORD|START");
                         startRecording();
 
                         recordButton.setEnabled(false);
@@ -261,25 +260,33 @@ public class MainActivity extends Activity implements SensorEventListener{
         deriveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                SensorCombo cur = sensorCombo.get(sensorCombo.size() - 1);
-                initDevice(filename, cur);
-                keyDerivationSetState(KD_THIRD_STATE);
+                derive();
+                sendMessage("DERIVE");
             }
         });
 
         authButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                RSKeyGenerator rsKeyGen = new RSKeyGenerator();
-                MsgKeyPair msgKeyPair = rsKeyGen.generateKey(currentDevice.getFingerprint());
-
-                String rsKey = msgKeyPair.getKey();
-                String msg = msgKeyPair.getMsg();
-
-                currentDevice.setMsgKeyPair(msgKeyPair);
-                sendMessage("SEND|RSKEY|"+rsKey);
+                auth();
             }
         });
+    }
+
+    private void derive(){
+        SensorCombo cur = sensorCombo.get(sensorCombo.size() - 1);
+        initDevice(filename, cur);
+        keyDerivationSetState(KD_THIRD_STATE);
+    }
+
+    private void auth(){
+        RSKeyGenerator rsKeyGen = new RSKeyGenerator();
+        MsgKeyPair msgKeyPair = rsKeyGen.generateKey(currentDevice.getFingerprint());
+
+        String rsKey = msgKeyPair.getKey();
+        String msg = msgKeyPair.getMsg();
+
+        currentDevice.setMsgKeyPair(msgKeyPair);
     }
 
     public void cancelStartTimer(){
@@ -444,7 +451,6 @@ public class MainActivity extends Activity implements SensorEventListener{
                     String msgParts[] = readMessage.split("\\|");
 
                     Log.d(TAG, "handleMessage: Received message - " + readMessage);
-                    Log.d(TAG, "handleMessage: msgParts - " + msgParts[0] + ", " + msgParts[1] + "," + msgParts[2]);
 
                     if(msgParts[0].equals("RECORD")){
                         Log.d(TAG, "handleMessage: HIT RECORD");
@@ -479,6 +485,10 @@ public class MainActivity extends Activity implements SensorEventListener{
                             });
                         }
 
+                        else if(msgParts[1].equals("STARTNOSYNC")) {
+                            startRecording();
+                        }
+
                         else if (msgParts[1].equals("STOP")){
                             stopRecording();
                         }
@@ -486,7 +496,6 @@ public class MainActivity extends Activity implements SensorEventListener{
 
                     else if(msgParts[0].equals("SEND")) {
                         if(msgParts[1].equals("RSKEY")){
-
                             RSKeyGenerator rsKeyGen = new RSKeyGenerator();
                             String receivedKey = msgParts[2];
 
@@ -499,12 +508,16 @@ public class MainActivity extends Activity implements SensorEventListener{
                                 intent.putExtra("RSCODEBASE64", receivedKey);
                                 intent.putExtra("RESULT", message);
 
-                            } catch(Exception e){
+                                startActivity(intent);
+
+                            } catch (Exception e) {
                                 MainActivity.this.sendMessage("SEND|NACK");
 
                                 Intent intent = new Intent(getBaseContext(), KeyExchangeActvityReceiver.class);
                                 intent.putExtra("RSCODEBASE64", receivedKey);
                                 intent.putExtra("RESULT", "Device authentication unsuccessful.");
+
+                                startActivity(intent);
                             }
                         }
 
@@ -530,7 +543,9 @@ public class MainActivity extends Activity implements SensorEventListener{
                             startActivity(intent);
                         }
                     }
-
+                    else if(msgParts[0].equals("DERIVE")){
+                        derive();
+                    }
                     break;
 
                 case Constants.MESSAGE_DEVICE_NAME:
@@ -655,24 +670,29 @@ public class MainActivity extends Activity implements SensorEventListener{
         }
     }
 
-    private void keyDerivationSetState(int state){
-        if(state == KD_FIRST_STATE){
-            deriveButton.setEnabled(false);
-            authButton.setEnabled(false);
-            setStatusText("Record to begin.");
-        }
+    private void keyDerivationSetState(final int state){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if(state == KD_FIRST_STATE){
+                    deriveButton.setEnabled(false);
+                    authButton.setEnabled(false);
+                    setStatusText("Record to begin.");
+                }
 
-        if(state == KD_SECOND_STATE){
-            deriveButton.setEnabled(true);
-            authButton.setEnabled(false);
-            setStatusText("Key ready to be derived.");
-        }
+                if(state == KD_SECOND_STATE){
+                    deriveButton.setEnabled(true);
+                    authButton.setEnabled(false);
+                    setStatusText("Key ready to be derived.");
+                }
 
-        if(state == KD_THIRD_STATE){
-            deriveButton.setEnabled(false);
-            authButton.setEnabled(true);
-            setStatusText("Ready for Key Exchange.");
-        }
+                if(state == KD_THIRD_STATE){
+                    deriveButton.setEnabled(false);
+                    authButton.setEnabled(true);
+                    setStatusText("Ready for Key Exchange.");
+                }
+            }
+        });
     }
 
     private static class StartRecordingTask extends TimerTask {
