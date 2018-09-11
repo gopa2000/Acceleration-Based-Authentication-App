@@ -37,10 +37,6 @@ This is just to describe how one can demo a successful handshake using this app.
  
 ### Screenshots
 
-Connecting action:
-
-<img src="https://user-images.githubusercontent.com/6462536/45339046-92d84380-b55e-11e8-836b-9fd34d4307f0.png" width="250">
-
-Connected device:
-
-<img src="https://user-images.githubusercontent.com/6462536/45339039-8227cd80-b55e-11e8-9b74-b81b177d1844.png" width="250">
+| Connecting action | Connected device |
+|-------------------|------------------|
+| <img src="https://user-images.githubusercontent.com/6462536/45339046-92d84380-b55e-11e8-836b-9fd34d4307f0.png" width="250"> | <img src="https://user-images.githubusercontent.com/6462536/45339039-8227cd80-b55e-11e8-9b74-b81b177d1844.png" width="250">|
